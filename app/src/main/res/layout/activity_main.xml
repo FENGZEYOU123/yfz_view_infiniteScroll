@@ -10,4 +10,9 @@
         android:layout_height="match_parent">
     </com.yfz.infinitescroll.ScrollFragmentView>
 
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </EditText>
 </androidx.constraintlayout.widget.ConstraintLayout>

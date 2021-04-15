@@ -26,11 +26,14 @@ public class ScrollFragmentView extends View {
     //第一张背景已上移的高度
     private float mScrollCurrentY =0;
     //第二章背景已上移的高度
-    private float mScrollNextY =0;
+    private float mScrollNextY =-10000;
     //背景刷新频率,通过延迟消息实现.数值越大,刷新频率越低,会有卡顿的感觉
     private final long mRefreshRate = 5L;
     //背景每帧上移高度
-    private float mRefreshHeightPerFrameRate =4;
+    private float mRefreshHeightPerFrameRate =11;
+    //控制是否滚动
+    private boolean isOpenScroll=true;
+    private boolean secondStart=false;
 
     public ScrollFragmentView(Context context) {
         super(context);
@@ -55,11 +58,20 @@ public class ScrollFragmentView extends View {
     }
 
     @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        Log.e("TAG", "onSizeChanged: "+getWidth()+" "+getHeight());
+
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        mMatrix.reset();
-        mMatrix.preTranslate(0, -1*mScrollNextY);
-        canvas.drawBitmap(mBitmap,mMatrix,mPaint);
+        if(secondStart) {
+            mMatrix.reset();
+            mMatrix.preTranslate(0, -1 * mScrollNextY);
+            canvas.drawBitmap(mBitmap, mMatrix, mPaint);
+        }
 
         mMatrix.reset();
         mMatrix.postTranslate(0, -1*mScrollCurrentY);
@@ -71,18 +83,22 @@ public class ScrollFragmentView extends View {
     private Runnable scrollRunnable = new Runnable() {
         @Override
         public void run() {
-            mScrollCurrentY=mScrollCurrentY+mRefreshHeightPerFrameRate;
-            if(mScrollCurrentY>=getHeight()){
-                mScrollNextY=getHeight();
-            }else {
-
+            if(isOpenScroll) {
+                //每帧增加背景上移位置
+                mScrollCurrentY = mScrollCurrentY + mRefreshHeightPerFrameRate;
+                //判断是否已经将整个背景图展示过一遍
+                if (mScrollCurrentY >= Math.abs(getHeight()-mBitmap.getHeight())) {
+                    if(!secondStart) {
+                        mScrollNextY = -1 * getHeight();
+                    }
+                    secondStart=true;
+                }
+                if(secondStart){
+                    mScrollNextY=mScrollNextY+ mRefreshHeightPerFrameRate;
+                }
+                Log.d("TAG", "run: " + mScrollCurrentY+" "+  mScrollNextY + " " + mBitmap.getHeight() + " " + getHeight()+" "+secondStart);
+                invalidate();
             }
-            if(mScrollCurrentY<=-1*mBitmap.getHeight()){
-                mScrollCurrentY=0;
-            }
-
-            Log.d("TAG", "run: "+mScrollCurrentY+" "+mScrollNextY+" "+mBitmap.getHeight()+" "+getHeight());
-            invalidate();
         }
     };
 }
